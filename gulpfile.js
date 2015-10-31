@@ -46,8 +46,14 @@ var STATIC_PATH           = './static';
 // the entry file of your js application
 var ENTRY_FILE            = SOURCE_PATH + '/main.js';
 
+var appFilesName          = 'app';
+
+// the stylus source
+var STYLES_PATH           = SOURCE_PATH + '/styles';
+var CSS_PATH              = BUILD_PATH + '/css';
+
 // the final output js file name
-var OUTPUT_FILE           = 'app.js';
+var OUTPUT_FILE           = appFilesName + '.js';
 
 // lint before dev builds
 var LINT_ON_DEV_BUILDS    = true;
@@ -75,6 +81,7 @@ var beep            = require('beepbeep');
 var plumber         = require('gulp-plumber');
 var filesize        = require('gulp-filesize');
 var notifier        = require('node-notifier');
+var stylus          = require('gulp-stylus');
 
 var keepFiles       = false;
 
@@ -119,31 +126,13 @@ var isLintFatal     = getBooleanValue(argv.lintfatal,     false);
 var target          = (argv && argv.target)               || 'development';
 var environment     = (argv && argv.environment)          || 'development';
 
-function isProduction() {
-  return environment === 'production';
-}
-function isDevelopment() {
-  return environment === 'development';
-}
-function isTest() {
-  return environment === 'test';
-}
-function clean() {
-	if (!keepFiles) {
-		del([BUILD_PATH + '/**/*']);
-	} 
-	
-	else {
-		keepFiles = false;
-	}
-}
 function logEnvironment() {
 
   var colorFunc = gutil.colors.green;
 
-	if (isProduction()) {
+  if (isProduction()) {
     colorFunc = gutil.colors.green;
-	}
+  }
 
   else if (isTest()) {
     colorFunc = gutil.colors.magenta;
@@ -166,6 +155,25 @@ function logEnvironment() {
 
 
 }
+function isProduction() {
+  return environment === 'production';
+}
+function isDevelopment() {
+  return environment === 'development';
+}
+function isTest() {
+  return environment === 'test';
+}
+function clean() {
+	if (!keepFiles) {
+		del([BUILD_PATH + '/**/*']);
+	}
+
+	else {
+		keepFiles = false;
+	}
+}
+
 function copyStatic() {
 	return gulp.src(STATIC_PATH + '/**/*')
 						.pipe(gulp.dest(BUILD_PATH + '/'));
@@ -266,20 +274,26 @@ function lint() {
     // lint error, return the stream and pipe to failAfterError last.
     .pipe(eslint.failAfterError());
 }
+function stylusAll() {
 
+  gulp.src(STYLES_PATH + '/**/*.styl')
+    .pipe(stylus())
+    .pipe(gulp.dest(CSS_PATH + '/'));
+}
 
 /**
  *  TASKS
  */
 gulp.task('lint',               lint);
 gulp.task('log-environment',    logEnvironment);
-gulp.task('clean-build',        ['log-environment', 'lint', 'clean', 'copy-static'], build);
+gulp.task('clean-build',        ['log-environment', 'lint', 'clean', 'copy-static', 'stylus'], build);
 gulp.task('clean',              clean);
 gulp.task('copy-static',        ['clean'], copyStatic);
 gulp.task('watch-js',           ['build'], reloadBrowser);
 gulp.task('watch-static',       ['copy-static'], reloadBrowser);
 
 gulp.task('build',              ['log-environment', 'lint'], build);   // will default to dev builds
+gulp.task('stylus',             stylusAll);
 gulp.task('serve',              ['clean-build'], serve);
 gulp.task('default',            ['serve']);
 //gulp.task('default',            function (){

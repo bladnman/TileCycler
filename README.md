@@ -1,6 +1,6 @@
-# MMWeb App Template
+# TileCycler
 
-Simple template to get things started for a web app
+Simple test system to work on a view recycling system
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ You will need the following things properly installed on your computer.
 
 ## Installation
 
-    git clone <repository-url>
+    git clone https://github.com/bladnman/TileCycler.git
     npm install --global gulp
     
     # cd into repo directory
@@ -23,14 +23,3 @@ You will need the following things properly installed on your computer.
 * `gulp`
 * Visit your app at [http://localhost:3000](http://localhost:3000).
 
-
-## ESLINT
-
-This starter environment uses [ES-Lint](http://eslint.org/) as the linting
-system. This is to allow for ES6/7 code.
-
-## TODO:
-
-* stylus
-* jsdoc
-* qunit
