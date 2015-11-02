@@ -1,7 +1,16 @@
+import ContainerManager from './js/ContainerManager';
 
-import SAMPLE from './sample';
+let containerManagers = [];
 
-var sampleClass = new SAMPLE();
-sampleClass.sayHello();
+function main() {
+  initContainers();
+}
+function initContainers() {
+  $('.container').each(function(idx, el) {
+    containerManagers.push(new ContainerManager($(el)));
+  });
+}
 
-console.log('finished', new Date());
+$(document).ready(function() {
+  main()
+});

@@ -286,7 +286,7 @@ function stylusAll() {
  */
 gulp.task('lint',               lint);
 gulp.task('log-environment',    logEnvironment);
-gulp.task('clean-build',        ['log-environment', 'lint', 'clean', 'copy-static', 'stylus'], build);
+gulp.task('clean-build',        ['clean', 'log-environment', 'lint', 'copy-static', 'stylus'], build);
 gulp.task('clean',              clean);
 gulp.task('copy-static',        ['clean'], copyStatic);
 gulp.task('watch-js',           ['build'], reloadBrowser);
