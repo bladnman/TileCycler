@@ -1,11 +1,11 @@
-class Listeners {
+class ListenerController {
   constructor() {
     this._listeners   = [];
   }
   addListener(listener) {
 
-    // improper values
-    if ( typeof listener === 'undefined' || listener === null || Object.prototype.toString.call( listener ) !== '[object Function]' ) {
+    // invalid listener
+    if ( ! isValidListener(listener) ) {
       console.warn('Listeners must be valid functions');
       return this;
     }
@@ -15,8 +15,9 @@ class Listeners {
     return this;
   }
   removeListener(listener) {
-    // improper values
-    if ( typeof listener === 'undefined' || listener === null ) {
+
+    // invalid listener
+    if ( ! isValidListener(listener) ) {
       return this;
     }
 
@@ -26,9 +27,8 @@ class Listeners {
 
   }
   notifyListeners(/*payload*/) {
-
     for ( var listener of this._listeners ) {
-      if ( typeof listener !== 'undefined' && listener !== null && Object.prototype.toString.call( listener ) === '[object Function]' ) {
+      if ( isValidListener(listener) ) {
         listener.apply(this, arguments);
       }
     }
@@ -38,8 +38,10 @@ class Listeners {
   }
 }
 
-export default Listeners;
-
+export default ListenerController;
+function isValidListener(listener) {
+  return typeof listener !== 'undefined' && listener !== null && Object.prototype.toString.call(listener) === '[object Function]';
+}
 function arrayPushUnique(array, element) {
   if ( Object.prototype.toString.call( array ) !== '[object Array]') {
     return null;

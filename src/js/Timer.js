@@ -1,4 +1,4 @@
-import Listeners from './Listeners';
+import ListenerController from './ListenerController';
 
 class Timer {
 
@@ -13,10 +13,12 @@ class Timer {
     // public
     this.mills        = mills;
     this.payload      = payload;
+    this.lastStarted  = null;
+    this.lastFired    = null;
 
     // internal
     this._timer       = null;
-    this._listeners   = new Listeners();
+    this._listeners   = new ListenerController();
 
     if ( callback ) {
       this.on(Timer.EVENT.fire, callback);
@@ -29,7 +31,10 @@ class Timer {
   }
   start() {
     this.stop();
+
+    this.lastStarted  = new Date();
     this._timer       = setTimeout(this.fire.bind(this), this.mills);
+
     return this;
   }
   stop() {
@@ -41,11 +46,12 @@ class Timer {
   }
   fire() {
     this.stop();
+
+    this.lastFired  = new Date();
     this.notifyListeners();
 
     return this;
   }
-
 
   addEventListener(eventType, callback) {
 
