@@ -1,17 +1,29 @@
-
+import Listeners from './Listeners';
 
 class Timer {
+
+  static get EVENT() {
+    return {
+      fire            : 'fire'
+    };
+  }
+
   constructor(mills=0, callback=null, payload=null) {
 
     // public
-    this.callback     = callback;
     this.mills        = mills;
     this.payload      = payload;
 
     // internal
     this._timer       = null;
+    this._listeners   = new Listeners();
+
+    if ( callback ) {
+      this.on(Timer.EVENT.fire, callback);
+    }
 
   }
+
   isRunning() {
     return !!this._timer;
   }
@@ -29,12 +41,50 @@ class Timer {
   }
   fire() {
     this.stop();
+    this.notifyListeners();
 
-    // our callback is a function
-    if ( this.callback && Object.prototype.toString.call( this.callback ) === '[object Function]' ) {
-      this.callback.apply(this, [this.payload]);
-    }
     return this;
+  }
+
+
+  addEventListener(eventType, callback) {
+
+    // improper values
+    if ( typeof eventType === 'undefined' || eventType === null || Object.prototype.toString.call( callback ) !== '[object Function]' ) {
+      console.warn('To subscribe to Timer events you must send valid callback functions as observers');
+      return this;
+    }
+
+    // FIRE
+    if ( eventType.toLowerCase() === Timer.EVENT.fire.toLowerCase() ) {
+      this._listeners.addListener(callback);
+    }
+
+    // UNKNOWN EVENT TYPE
+    else {
+      console.warn('Unknown event type');
+    }
+
+    return this;
+  }
+  removeEventListener(eventType, callback) {
+    // improper values
+    if ( Object.prototype.toString.call( callback ) !== '[object Function]' ) {
+      return this;
+    }
+
+    // only 1 listener, just attempt to unsub
+    this._listeners.removeListener(callback);
+
+    return this;
+  }
+
+  notifyListeners() {
+
+    this._listeners.notifyListeners(this.payload);
+
+    return this;
+
   }
 }
 

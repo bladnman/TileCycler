@@ -10,12 +10,18 @@ const TILE = {
 const PAGES_TO_BUILD = 1;
 
 class ContainerManager {
+
   constructor(container) {
 
     this.scrollManager    = null;
     this.container        = null;
     this.elemsPerWidth    = null;
     this.elemsPerHeight   = null;
+
+    // handler refs
+    this._scrollHandler         = null;
+    this._scrollStartHandler    = null;
+    this._scrollEndHandler      = null;
 
     // make sure it's a jq item
     if ( PSU.isA(container) ) {
@@ -25,11 +31,34 @@ class ContainerManager {
     this.setup();
   }
   setup() {
-    this.scrollManager = new ScrollManager(this.container, this.didScroll, SCROLL_DELAY);
 
+    this.addListeners();
     this.calculateMetrics();
     this.installTiles();
 
+  }
+  addListeners() {
+
+    this.removeListeners();
+
+    this.scrollManager          = this.scrollManager || new ScrollManager(this.container, SCROLL_DELAY);
+
+    this._scrollHandler         = this.didScroll.bind(this);
+    this._scrollStartHandler    = this.scrollStarted.bind(this);
+    this._scrollEndHandler      = this.scrollEnded.bind(this);
+
+    this.scrollManager.addEventListener(ScrollManager.EVENT.scroll,         this._scrollHandler)
+                      .addEventListener(ScrollManager.EVENT.scrollStart,    this._scrollStartHandler)
+                      .addEventListener(ScrollManager.EVENT.scrollEnd,      this._scrollEndHandler);
+  }
+  removeListeners() {
+    if ( PSU.isNoE(this.scrollManager) ) {
+      return;
+    }
+
+    this.scrollManager.removeEventListener(ScrollManager.EVENT.scroll,      this._scrollHandler)
+                      .removeEventListener(ScrollManager.EVENT.scrollStart, this._scrollStartHandler)
+                      .removeEventListener(ScrollManager.EVENT.scrollEnd,   this._scrollEndHandler);
   }
   calculateMetrics() {
     this.elemsPerWidth    = Math.ceil(this.container.innerWidth() / TILE.outerWidth);
@@ -48,7 +77,15 @@ class ContainerManager {
 
   }
   didScroll() {
-    console.log('Container did scroll!');
+    console.log('didScroll');
+  }
+  scrollStarted() {
+    console.log('scrollStarted');
+  }
+  scrollEnded() {
+    console.log('scrollEnded - unbinding end listener');
+    this.scrollManager.removeEventListener(ScrollManager.EVENT.scrollEnd, this._scrollEndHandler);
+
   }
 
 }
