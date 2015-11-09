@@ -1,21 +1,24 @@
 
-import ScrollListener from './ScrollListener';
-import PSU from './PSU';
+import ScrollListener from './lib/ScrollListener';
+import StageManager from './stageWork/StageManager';
+import Actor from './stageWork/Actor';
+import PSU from './lib/PSU';
 
-const SCROLL_DELAY = 100;
-const TILE = {
+const SCROLL_DELAY            = 100;
+const TILE                    = {
   outerWidth: 160,
   outerHeight: 185
 };
-const STAGE_OVERFLOW_PAGES = 1; // number of 'pages' of content available on either side of visible area
-const PAGES_TO_BUILD = 1 + (2 * STAGE_OVERFLOW_PAGES); // 2 overflow areas (left, right) and visible area
+const STAGE_OVERFLOW_PAGES    = 1; // number of 'pages' of content available on either side of visible area
+const PAGES_TO_BUILD          = 1 + (2 * STAGE_OVERFLOW_PAGES); // 2 overflow areas (left, right) and visible area
+//const PAGES_TO_BUILD          = 2; // 2 overflow areas (left, right) and visible area
 
 class ContainerManager {
 
   constructor(container) {
 
     this.scrollManager          = null;
-    this.container              = null;
+    this.$container             = null;
     this.elemsPerWidth          = null;
     this.elemsPerHeight         = null;
 
@@ -24,14 +27,21 @@ class ContainerManager {
     this._scrollStartHandler    = null;
     this._scrollEndHandler      = null;
 
+    // controllers
+    this._stageManager          = null;
+
     // make sure it's a jq item
     if ( PSU.isA(container) ) {
-      this.container            = PSU.isJquery(container) ? container : $(container);
+      this.$container            = PSU.isJquery(container) ? container : $(container);
     }
 
     this.setup();
   }
   setup() {
+
+
+    this._stageManager          = StageManager.createWithView(this.$container);
+
     this.addListeners();
     this.calculateMetrics();
     this.installTiles();
@@ -40,7 +50,7 @@ class ContainerManager {
 
     this.removeListeners();
 
-    this.scrollManager          = this.scrollManager || new ScrollListener(this.container, SCROLL_DELAY);
+    this.scrollManager          = this.scrollManager || new ScrollListener(this.$container, SCROLL_DELAY);
 
     this._scrollHandler         = this.didScroll.bind(this);
     this._scrollStartHandler    = this.scrollStarted.bind(this);
@@ -60,34 +70,49 @@ class ContainerManager {
                       .removeEventListener(ScrollListener.EVENT.scrollEnd,   this._scrollEndHandler);
   }
   calculateMetrics() {
-    this.elemsPerWidth    = Math.ceil(this.container.innerWidth() / TILE.outerWidth);
-    this.elemsPerHeight   = Math.ceil(this.container.innerHeight() / TILE.outerHeight);
+    this.elemsPerWidth    = Math.ceil(this.$container.innerWidth() / TILE.outerWidth);
+    this.elemsPerHeight   = Math.ceil(this.$container.innerHeight() / TILE.outerHeight);
   }
   installTiles() {
-    if ( PSU.isNoE(this.container) ) {
+    if ( PSU.isNoE(this.$container) ) {
       return;
     }
-    this.container.empty();
+    this.$container.empty();
 
     let tileCount = this.elemsPerWidth * this.elemsPerHeight * PAGES_TO_BUILD;
     for (var i = 0; i < tileCount; i++) {
-      this.container.append(getTileElem('Tile ' + (i + 1)));
+      let actor = new Actor(getTileElem('Actor ' + (i + 1)));
+      actor.id = i+1;
+
+      actor.$view.addClass('actor-' + (i+1));
+
+      this.$container.append(actor.$view);
+      this._stageManager.addActor(actor);
     }
 
   }
   didScroll(/*scrollState*/) {
-    console.log('didScroll');
+    //this.reportDirections(scrollState.deltaFromPrevious.scrollDirection);
+    //this._stageManager.stageDidMove();
   }
   scrollStarted(/*scrollState*/) {
-    console.log('scrollStarted');
+    //console.log('scrollStarted');
+
   }
-  scrollEnded(scrollState) {
-    console.log('scroll ended!', scrollState);
+  scrollEnded(/*scrollState*/) {
+    //console.log('scroll ended!', scrollState);
     //console.log('scrollEnded - unbinding end listener');
     //this.scrollManager.removeEventListener(ScrollListener.EVENT.scrollEnd, this._scrollEndHandler);
-
+    this._stageManager.stageDidMove();
   }
 
+
+  reportDirections(direction) {
+    if (direction.isUp)     {console.log('up')};
+    if (direction.isDown)   {console.log('down')};
+    if (direction.isLeft)   {console.log('left')};
+    if (direction.isRight)  {console.log('right')};
+  }
 }
 export default ContainerManager;
 
@@ -103,6 +128,7 @@ function getTileElem(title, imgUrl) {
     let img = tile.find('.img');
     img.css('background-image', 'url(' + imgUrl + ')');
   }
+
 
   return tile;
 }

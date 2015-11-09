@@ -29,27 +29,67 @@ class ScrollListener {
     this.elemToBindTo           = elemToBindTo;
 
     this._isScrolling           = false;
-    this._startingState         = null;
     this._startMills            = null;
+
+    this._startingState         = null;
+    this._previousState         = null;
+    this._currentState          = null;
+
     this.addListenerController();
   }
 
   get scrollState() {
     return {
-      starting    : this._startingState,
-      current     : this._currentState
+      starting            : this._startingState,
+      previous            : this._previousState,
+      current             : this._currentState,
+      deltaFromPrevious   : this._getDeltaState(this._currentState, this._previousState),
+      deltaFromStart      : this._getDeltaState(this._currentState, this._startingState)
     };
   }
 
-  get _currentState() {
+  _getCurrentState() {
+
+    var scrollLeft      = 0,
+        scrollTop       = 0,
+        mills           = 0;
+
+    if ( this.elemToBindTo !== null ) {
+      scrollLeft    = this.elemToBindTo.scrollLeft() || 0;
+      scrollTop     = this.elemToBindTo.scrollTop() || 0;
+      mills         = this._startMills === null ? 0 : (new Date()).getTime() - this._startMills;
+    }
 
     return {
-      scrollLeft  : this.elemToBindTo.scrollLeft(),
-      scrollTop   : this.elemToBindTo.scrollTop(),
-      mills       : this._startMills === null ? 0 : (new Date()).getTime() - this._startMills
+      scrollLeft  : scrollLeft,
+      scrollTop   : scrollTop,
+      mills       : mills
     };
   }
+  _getDeltaState(thisState, comparedToState) {
 
+    var scrollLeftDelta = 0,
+        scrollTopDelta = 0,
+        millsDelta = 0;
+
+    if ( thisState !== null && comparedToState !== null ) {
+      scrollLeftDelta    = thisState.scrollLeft  - comparedToState.scrollLeft;
+      scrollTopDelta     = thisState.scrollTop   - comparedToState.scrollTop;
+      millsDelta         = thisState.mills       - comparedToState.mills;
+    }
+
+    return {
+      scrollLeft  : scrollLeftDelta,
+      scrollTop   : scrollTopDelta,
+      mills       : millsDelta,
+      scrollDirection   : {
+        isUp      : scrollTopDelta < 0,
+        isDown    : scrollTopDelta > 0,
+        isLeft    : scrollLeftDelta < 0,
+        isRight   : scrollLeftDelta < 0
+      }
+    };
+  }
   addListenerController() {
     // no object
     if ( ! this.elemToBindTo ) {
@@ -89,24 +129,34 @@ class ScrollListener {
 
   }
   queueScrollHandling() {
+
+    // BOUNCE last 'current' info into 'previous'
+    this._previousState     = this._currentState;
+
+    // SET UP CURRENT
+    this._currentState      = this._getCurrentState();
+
+
     // timers not scheduled, start them
     if ( ! this.scrollTimer.isRunning() ) {
       this.scrollTimer.start();
     }
 
-    // SCROLLING BEGINS
+    // FIRST SCROLL
     if ( !this._isScrolling ) {
 
-      // record our starting position
+      // record our STARTING POSITION
       this._startMills      = (new Date()).getTime();
       this._startingState   = this._currentState;
+      this._previousState   = null;
 
       // mark that we are scrolling
-      this._isScrolling = true;
+      this._isScrolling     = true;
 
-      // report scroll start
+      // report SCROLL START
       this.scrollStartListeners.notifyListeners();
     }
+
   }
 
   addEventListener(eventType, listener) {
@@ -188,6 +238,8 @@ class ScrollListener {
   _reset() {
     this._isScrolling           = false;
     this._startingState         = null;
+    this._previousState         = null;
+    this._currentState          = null;
     this._startMills            = null;
   }
 }

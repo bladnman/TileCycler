@@ -220,6 +220,9 @@ function serve() {
 
 	browserSync(options);
 
+  // Watches for changes in files inside the './src' folder.
+  gulp.watch(SOURCE_PATH + '/**/*.styl', ['stylus-reload']);
+
 	// Watches for changes in files inside the './src' folder.
 	gulp.watch(SOURCE_PATH + '/**/*.js', ['watch-js']);
 
@@ -280,7 +283,12 @@ function stylusAll() {
     .pipe(stylus())
     .pipe(gulp.dest(CSS_PATH + '/'));
 }
+function stylusAndReload() {
 
+  stylusAll();
+
+  reloadBrowser();
+}
 /**
  *  TASKS
  */
@@ -294,6 +302,7 @@ gulp.task('watch-static',       ['copy-static'], reloadBrowser);
 
 gulp.task('build',              ['log-environment', 'lint'], build);   // will default to dev builds
 gulp.task('stylus',             stylusAll);
+gulp.task('stylus-reload',      stylusAndReload);
 gulp.task('serve',              ['clean-build'], serve);
 gulp.task('default',            ['serve']);
 //gulp.task('default',            function (){

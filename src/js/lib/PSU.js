@@ -241,36 +241,6 @@ PSU.setVal                  = function (item, field, value) {
     item[field] = value;
   }
 };
-PSU.setValAndDirty          = function (object, attributeKey, value) {
-	/**
-	 *  Ember-specific function
-	 *
-	 *  This function will dirty the attribute in question
-	 *  and update to new value safely such that any change --
-	 *  even to the same value as it started with -- will produce
-	 *  a message of change to observers
-	 */
-	if ( PSU.isNoE(object) || PSU.isNoE(attributeKey) ) {
-		return;
-	}
-
-	if ( !object.set || !object.get ) {
-		return;
-	}
-
-	if ( !Ember || !Ember.changeProperties ) {
-		return;
-	}
-
-	var currentVal    = object.get(attributeKey);
-	var dirtyVal      = (currentVal === null) ? true : null;
-
-	Ember.changeProperties(function() {
-		object.set(attributeKey, dirtyVal);   // first dirty it
-		object.set(attributeKey, value);      // then set it
-	});
-
-};
 PSU.random                  = function (max, min) {
 	max 			= parseInt(max);
 	min 			= parseInt(min);
